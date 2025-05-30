@@ -16,19 +16,38 @@ import java.nio.file.Paths;
 public class FileUploadController {
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) throws IOException {
-        String uploadDir = "uploads/";
-        File directory = new File(uploadDir);
-        if (!directory.exists()){
-            directory.mkdirs();
+    public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
+        try {
+            // Get absolute path of current working directory
+            String currentDir = new File(".").getCanonicalPath();
+            String uploadDir = currentDir + File.separator + "uploads" + File.separator;
+
+            // Create 'uploads' folder if it doesn't exist
+            File directory = new File(uploadDir);
+            if (!directory.exists()) {
+                directory.mkdirs();
+                System.out.println("Uploads directory created at: " + uploadDir);
+            }
+
+            // Create path for saving file
+            Path filePath = Paths.get(uploadDir + file.getOriginalFilename());
+
+            // Save the file
+            Files.write(filePath, file.getBytes());
+            System.out.println("File saved to: " + filePath);
+
+            // Verify if file exists
+            File savedFile = new File(filePath.toString());
+            if (savedFile.exists()) {
+                System.out.println("✅ YES! File exists after saving.");
+            } else {
+                System.out.println("❌ NO! File does not exist after saving.");
+            }
+
+            return ResponseEntity.ok("✅ File uploaded successfully to: " + filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("❌ Failed to upload: " + e.getMessage());
         }
-
-
-        Path filePath = Paths.get(uploadDir + file.getOriginalFilename());
-        Files.write(filePath,file.getBytes());
-        return ResponseEntity.ok("file successfully uploaded and stored " + file.getOriginalFilename());
-
-
-
     }
 }

@@ -30,7 +30,7 @@ public class FileUploadController {
             cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
 
             // User ko sirf success message bhejo
-            return ResponseEntity.ok("✅ Image uploaded successfully!");
+            return ResponseEntity.ok("✅ Image uploaded successfully!" + file.getOriginalFilename());
 
         } catch (IOException e) {
             e.printStackTrace();

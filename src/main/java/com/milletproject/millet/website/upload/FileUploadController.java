@@ -1,59 +1,50 @@
 package com.milletproject.millet.website.upload;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Map;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/api/files")
 public class FileUploadController {
+
     private final Cloudinary cloudinary;
 
-    public FileUploadController(Cloudinary cloudinary){
-        this.cloudinary = cloudinary;
+    public FileUploadController() {
+        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
+                "cloud_name", System.getenv("CLOUDINARY_CLOUD_NAME"),
+                "api_key", System.getenv("CLOUDINARY_API_KEY"),
+                "api_secret", System.getenv("CLOUDINARY_API_SECRET")
+        ));
     }
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
         try {
-            // Get absolute path of current working directory
-            String currentDir = new File(".").getCanonicalPath();
-            String uploadDir = currentDir + File.separator + "uploads" + File.separator;
+            // Convert MultipartFile to File
+            File tempFile = File.createTempFile("upload-", file.getOriginalFilename());
+            file.transferTo(tempFile);
 
-            // Create 'uploads' folder if it doesn't exist
-            File directory = new File(uploadDir);
-            if (!directory.exists()) {
-                directory.mkdirs();
-                System.out.println("Uploads directory created at: " + uploadDir);
-            }
+            // Upload to Cloudinary
+            Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
 
-            // Create path for saving file
-            Path filePath = Paths.get(uploadDir + file.getOriginalFilename());
+            // Clean up temp file
+            tempFile.delete();
 
-            // Save the file
-            Files.write(filePath, file.getBytes());
-            System.out.println("File saved to: " + filePath);
+            // Get URL
+            String imageUrl = (String) uploadResult.get("secure_url");
 
-            // Verify if file exists
-            File savedFile = new File(filePath.toString());
-            if (savedFile.exists()) {
-                System.out.println("✅ YES! File exists after saving.");
-            } else {
-                System.out.println("❌ NO! File does not exist after saving.");
-            }
-
-            return ResponseEntity.ok("✅ File uploaded successfully to: " + filePath);
+            return ResponseEntity.ok("✅ Uploaded to Cloudinary: " + imageUrl);
         } catch (IOException e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("❌ Failed to upload: " + e.getMessage());
+            return ResponseEntity.status(500).body("❌ Upload failed: " + e.getMessage());
         }
     }
 }

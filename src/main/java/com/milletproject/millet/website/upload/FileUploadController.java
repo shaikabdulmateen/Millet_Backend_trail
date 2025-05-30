@@ -24,36 +24,21 @@ public class FileUploadController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFiles(@RequestParam("file") MultipartFile[] files) {
-        StringBuilder responseMessage = new StringBuilder();
+    public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
+        try {
+            // File ko Cloudinary par upload karo
+            cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
 
-        for (MultipartFile file : files) {
-            try {
-                // File ko Cloudinary par upload karo
-                cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            // User ko sirf success message bhejo
+            System.out.println("File name :-" + file.getOriginalFilename() );
+            System.out.println("✅ Image successfully stored and Exist in cloudinary .");
+            return ResponseEntity.ok("✅ Image uploaded successfully!" + file.getOriginalFilename());
 
-                // Console logs
-                System.out.println("File name :- " + file.getOriginalFilename());
-                System.out.println("✅ Image successfully stored and exists in Cloudinary.");
-
-                // Response message append
-                responseMessage.append("✅ Image uploaded successfully: ")
-                        .append(file.getOriginalFilename())
-                        .append("\n");
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                responseMessage.append("❌ Upload failed for: ")
-                        .append(file.getOriginalFilename())
-                        .append(" - ")
-                        .append(e.getMessage())
-                        .append("\n");
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("❌ Upload failed: " + e.getMessage());
         }
-
-        return ResponseEntity.ok(responseMessage.toString());
     }
-
 
 }
 

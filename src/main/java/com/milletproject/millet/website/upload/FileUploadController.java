@@ -1,5 +1,6 @@
 package com.milletproject.millet.website.upload;
 
+import com.cloudinary.Cloudinary;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +15,11 @@ import java.nio.file.Paths;
 @CrossOrigin
 @RequestMapping("/api/files")
 public class FileUploadController {
+    private final Cloudinary cloudinary;
+
+    public FileUploadController(Cloudinary cloudinary){
+        this.cloudinary = cloudinary;
+    }
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {

@@ -35,6 +35,7 @@ public class FileUploadController {
 
                     // File name print
                     System.out.println("Uploaded: " + file.getOriginalFilename());
+                    System.out.println("Files uploaded successfully and stored at cloudinery");
                     responseMessage.append("✅ Uploaded: ").append(file.getOriginalFilename()).append("\n");
                 }
             }

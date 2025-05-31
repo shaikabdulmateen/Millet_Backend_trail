@@ -24,23 +24,29 @@ public class FileUploadController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
+    public ResponseEntity<String> uploadMultipleFiles(@RequestParam("images") MultipartFile[] files) {
+        StringBuilder responseMessage = new StringBuilder();
+
         try {
-            // File ko Cloudinary par upload karo
-            cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    // Cloudinary par upload
+                    cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
 
-            // User ko sirf success message bhejo
-            System.out.println("File name :-" + file.getOriginalFilename() );
-            System.out.println("✅ Image successfully stored and Exist in cloudinary .");
-            return ResponseEntity.ok("✅ Image uploaded successfully!" + file.getOriginalFilename());
-
+                    // File name print
+                    System.out.println("Uploaded: " + file.getOriginalFilename());
+                    responseMessage.append("✅ Uploaded: ").append(file.getOriginalFilename()).append("\n");
+                }
+            }
+            return ResponseEntity.ok(responseMessage.toString());
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("❌ Upload failed: " + e.getMessage());
         }
     }
-
 }
+
+
 
 
 
